@@ -1,0 +1,52 @@
+.container-fluid {
+	padding-top: 61px;
+}
+
+.no-text-deco {
+	text-decoration: none;
+}
+
+.question-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+.question-content {
+  font-size: 1rem;
+  font-weight: 400;
+}
+.answer-content {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+button:focus {
+  outline: 0;
+}
+.trigger {
+  padding: 0;
+  font-size: large;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.can-vote {
+  opacity: 0.8;
+}
+.can-vote:hover {
+  opacity: 1;
+}
+
+.avatar {
+  width: 2.5em;
+  height: 2.5em;
+}
+.avatar-reply {
+  width: 3em;
+  height: 3em;
+}
+.avatar-big {
+  width: 3.5em;
+  height: 3.5em;
+}
+
+

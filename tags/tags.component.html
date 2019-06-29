@@ -1,0 +1,33 @@
+<div class="container-fluid">
+  <div class="row py-3 justify-content-center">
+
+    <div class="col-lg-8 d-flex flex-column">
+
+      <div class="d-flex justify-content-start align-items-center font-title font-weight-light text-primary border-bottom pb-2 my-4">
+        <span>Questions</span>
+        <span class="text-info mx-1">{{tag}}</span>
+        <span *ngIf="questions.length!=0">({{questions.length}})</span>
+      </div>
+  
+      <div class="row" *ngIf="questions.length==0">
+        <div class="col-12">
+          
+          <div class="d-flex flex-column align-items-start font-weight-light">
+            <p class="card-text">Aucune question trouvée dans cette catégorie !</p>
+          </div>
+
+        </div>
+      </div>
+      
+      <div *ngIf="questions.length!=0">
+
+        <a routerLink="../../{{question._id}}" class="no-text-deco" *ngFor="let question of questions">
+          <app-card-question [question]="question"></app-card-question>
+        </a>
+            
+      </div>
+    
+    </div>
+
+  </div>
+</div>

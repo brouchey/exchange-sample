@@ -1,0 +1,74 @@
+<div class="container-fluid">
+	<div class="row justify-content-center">
+
+		<div class="col-lg-8 d-flex flex-column">
+
+			<div class="d-flex justify-content-start align-items-center font-title font-weight-light text-primary border-bottom pb-2 my-4">
+				<span>Nouvelle Question</span>
+			</div>
+
+			<div class="card mb-3">
+				<div class="card-body">
+
+					<div class="card-text">
+						
+							<form (ngSubmit)="createQuestion(question)">
+									
+								<!-- Titre -->
+								<div class="form-group mb-4">
+									<label for="title">Titre</label>
+									<input type="text" class="form-control my-2" id="title" aria-describedby="titleHelp" required
+										[(ngModel)]="question.title" name="title" #title="ngModel" />
+									<span id="titleHelp" class="form-text text-muted">
+										Le titre sera la référence principale affiché à tous, soyez le plus précis possible.
+									</span>
+								</div>
+
+								<!-- Content -->
+								<app-markdown-editor [(markdownText)]="question.content" class="my-4"></app-markdown-editor>
+								<!--  (lexer)=questionContent($event) || keep this one in case of we need the lexer it is implemented but don t send anything to the server -->
+								<label class="text-muted">Nous préférons les questions qui peuvent être répondues, pas seulement discutées. Merci de fournir autant de détails que possible et partager également les recherches que vous avez effectuées ! Notez que le formatage de texte est supporté.</label>
+
+								<!-- Tags -->
+								<div class="form-group my-4" [ngClass]="{'border-top pt-4': question.content}">
+									<label for="tags">Tags</label>
+
+									<div class="input-group my-2">
+										<div *ngIf="question.tags" class="input-group-prepend">
+											<button *ngFor="let tag of question.tags; index as i; trackBy: trackByFn" (click)="removeTag(i)"
+												type="button" class="btn" [ngClass]="tag ? 'btn-outline-info' : 'btn-outline-danger'">
+												<span *ngIf="tag">{{tag}} &times;</span>
+												<span *ngIf="!tag">Invalide &times;</span>
+											</button>
+										</div>
+										<input *ngIf="question.tags.length<5" matInput type="text" class="form-control" id="tags" required [matAutocomplete]="auto" placeholder="Ajouter un tag"
+											[(ngModel)]="newTag" name="tags" (keydown.enter)="addTag()" (keydown.space)="addTag()" aria-describedby="tagsHelp"/>
+										<mat-autocomplete #auto="matAutocomplete" (optionSelected)="addTag(tag)">
+											<mat-option *ngFor="let tag of allTags" [value]="tag">{{tag}}</mat-option>
+										</mat-autocomplete>
+									</div>
+
+									<span id="tagsHelp" class="form-text text-muted">
+										Associer un maximum de 5 tags à votre question pour la catégoriser et faciliter sa recherche.
+									</span>
+
+								</div>
+				
+								<!-- Actions -->
+								<div class="d-flex justify-content-center align-items-center">
+									<a routerLink="../" class="btn btn-link text-danger">Annuler</a>
+									<button type="submit" class="btn btn-success"
+										[disabled]="!question.title || !question.content || question.tags.length==0">Créer</button>
+								</div>
+				
+							</form>
+
+						</div>
+
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+</div>

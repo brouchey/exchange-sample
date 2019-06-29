@@ -1,0 +1,35 @@
+.container-fluid {
+	padding-top: 61px;
+}
+
+.cursor {
+  cursor: pointer;
+}
+.no-text-deco {
+	text-decoration: none;
+}
+
+.font-title {
+  font-size: 1.1rem;
+}
+
+.card {
+	// font-size: 1rem;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+.card:hover {
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.avatar {
+  width: 3em;
+  height: 3em;
+}
+
+.answer-success {
+	border-left: 4px solid #28a745;
+}
+.is-star {
+	border-right: 4px solid #ffd970;
+}

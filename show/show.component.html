@@ -1,0 +1,473 @@
+<div class="container-fluid">
+	<div class="row py-3 justify-content-center">
+
+		<div class="col-lg-8 d-flex flex-column">
+
+			<div *ngIf="question">
+
+				<!-- Question Details -->
+				<div class="card">
+					<div class="card-body">
+				
+						<div class="card-text text-muted d-flex justify-content-between align-items-center">
+
+							<div class="d-flex justify-content-start align-items-center">
+								<i class="fa-lg fa-fw" aria-hidden="true" [ngClass]="question.hasBest ? 'fas fa-check text-success' : question.answers.length ? 'fal fa-comment-dots' : 'fal fa-comment'"></i>
+								<span class="mx-1">{{question.answers.length}}</span>
+								<span *ngIf="question.answers.length<2" class="d-none d-md-block">Réponse</span>
+								<span *ngIf="question.answers.length>1" class="d-none d-md-block">Réponses</span>
+							</div>
+
+							<div class="d-flex justify-content-start align-items-center">
+								<i class="fal fa-thumbs-up fa-lg fa-fw" aria-hidden="true"></i>
+								<span class="mx-1">{{question.votecount}}</span>
+								<span *ngIf="question.votecount<2" class="d-none d-md-block">Vote</span>
+								<span *ngIf="question.votecount>1" class="d-none d-md-block">Votes</span>
+							</div>
+
+							<div class="d-flex justify-content-start align-items-center">
+								<i class="fal fa-eye fa-lg fa-fw" aria-hidden="true"></i>
+								<span class="mx-1">{{question.views}}</span>
+								<span *ngIf="question.views<2" class="d-none d-md-block">Vue</span>
+								<span *ngIf="question.views>1" class="d-none d-md-block">Vues</span>
+							</div>
+
+							<div>
+								<!--Question Share-->
+								<!-- <button type="button" class="mr-1 trigger">
+									<i class="fal fa-share-square fa-lg text-muted" aria-hidden="true"></i>
+								</button> -->
+
+								<!--Question Favorite Trigger-->
+								<!--Logged in + no star => can star-->
+								<button *ngIf="isLoggedIn && !isStar(question)" type="button" class="ml-1 mr-1 trigger can-vote" (click)="starQuestion()" matTooltip="Ajouter aux Favoris">
+									<i class="fal fa-star fa-lg text-muted" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + star => can unstar-->
+								<button *ngIf="isLoggedIn && isStar(question)" type="button" class="ml-1 mr-1 trigger can-vote" (click)="unstarQuestion()" matTooltip="Retirer des Favoris">
+									<i class="fas fa-star fa-lg text-warning" aria-hidden="true"></i>
+								</button>
+
+								<!--Question Favorite Count-->
+								<span>{{question.stars.length}}</span>
+								
+							</div>
+
+						</div>
+
+					</div>
+
+					<!-- Course Related -->
+					<div class="card-body alert-primary text-center" *ngIf="question.course">
+
+						<span class="mr-1">Cette question est relative au cours</span>
+						<a routerLink="/library/courses/{{question.course._id}}" [queryParams]="{note: question.note._id}">{{question.course.title}} ({{question.note.title}})</a>
+
+					</div>
+
+				</div>
+
+				<!-- Question -->
+				<div class="card mt-3">
+					<div class="card-body">
+
+						<p class="card-text d-flex justify-content-start align-items-center">
+
+							<!-- Question Author Avatar -->
+							<span class="mr-2">
+								<img *ngIf="!question.user.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar-big"/>
+								<img *ngIf="question.user.avatar" src="{{question.user.avatar}}" alt="Avatar" class="rounded-circle border avatar-big"/>
+							</span>
+
+							<!-- Question Author Name -->
+							<span class="mr-1">
+								<a routerLink="/profile/{{question.user.userName}}" class="no-text-deco text-capitalize">{{question.user.userName}}</a>
+							</span>
+
+							<!-- Question Creation Date -->
+							<span class="mr-1 text-muted">&bull; {{question.createdAt | date:'d MMM y à H:mm'}}</span>
+
+							<!-- Question Edit Date -->
+							<span *ngIf="question.updatedAt" class="text-info">&bull; <em>Éditée le {{question.updatedAt | date:'d MMM y à H:mm'}}</em></span>
+
+							<!-- Question Triggers -->
+							<span class="ml-auto d-flex flex-column">
+
+								<!--Question Upvote-->
+								<!--Logged in + owner => can't vote-->
+								<button *ngIf="isLoggedIn && isOwner(question)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous ne pouvez pas voter pour vous-même" matTooltipPosition="left">
+									<i class="fal fa-chevron-circle-up text-secondary" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + not owner + already upvoted => can't vote-->
+								<button *ngIf="isLoggedIn && !isOwner(question) && isUpvoted(question)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette question" matTooltipPosition="left">
+									<i class="fas fa-chevron-circle-up text-success" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + not owner + already downvoted => can't vote-->
+								<button *ngIf="isLoggedIn && !isOwner(question) && isDownvoted(question)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette question" matTooltipPosition="left">
+									<i class="fal fa-chevron-circle-up text-secondary" aria-hidden="true"></i>
+								</button>
+								<!--Not logged in => need to login-->
+								<button *ngIf="!isLoggedIn" type="button" class="ml-1 mr-1 trigger can-vote" matTooltip="Vous devez vous identifier pour pouvoir voter" matTooltipPosition="left">
+									<i class="fas fa-chevron-circle-up text-success" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + not owner + no upvote + no downvote => can vote-->
+								<button *ngIf="isLoggedIn && !isOwner(question) && !isUpvoted(question) && !isDownvoted(question)" type="button" (click)="upvote()" class="ml-1 mr-1 trigger can-vote" matTooltip="Cette question montre un effort de recherche, elle est claire et utile" matTooltipPosition="left">
+									<i class="fas fa-chevron-circle-up text-success" aria-hidden="true"></i>
+								</button>
+								<!--End Question Upvote-->
+
+								<!-- Question Votes Count -->
+								<span class="lead font-weight-normal text-center" [ngClass]="{'text-success': question.votecount>0, 'text-danger': question.votecount<0, 'text-muted': question.votecount==0}">{{question.votecount}}</span>
+
+								<!--Question Downvote-->
+								<!--Logged in + owner => can't vote-->
+								<button *ngIf="isLoggedIn && isOwner(question)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous ne pouvez pas voter pour vous-même" matTooltipPosition="left">
+									<i class="fal fa-chevron-circle-down text-secondary" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + not owner + already downvoted => can't vote-->
+								<button *ngIf="isLoggedIn && !isOwner(question) && isDownvoted(question)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette question" matTooltipPosition="left">
+									<i class="fas fa-chevron-circle-down text-danger" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + not owner + already upvoted => can't vote-->
+								<button *ngIf="isLoggedIn && !isOwner(question) && isUpvoted(question)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette question" matTooltipPosition="left">
+									<i class="fal fa-chevron-circle-down text-secondary" aria-hidden="true"></i>
+								</button>
+								<!--Not logged in => need to login-->
+								<button *ngIf="!isLoggedIn" type="button" class="ml-1 mr-1 trigger can-vote" matTooltip="Vous devez vous identifier pour pouvoir voter" matTooltipPosition="left">
+									<i class="fas fa-chevron-circle-down text-danger" aria-hidden="true"></i>
+								</button>
+								<!--Logged in + not owner + no upvote + no downvote => can vote-->
+								<button *ngIf="isLoggedIn && !isOwner(question) && !isUpvoted(question) && !isDownvoted(question)" type="button" (click)="downvote()" class="ml-1 mr-1 trigger can-vote" matTooltip="Cette question montre aucun effort de recherche, elle n'est pas claire ou inutile" matTooltipPosition="left">
+									<i class="fas fa-chevron-circle-down text-danger" aria-hidden="true"></i>
+								</button>
+								<!--End Question Downvote-->
+
+							</span>
+
+						</p>
+
+						<p class="card-text question-title text-primary">Q: {{question.title}}</p>
+
+						<app-markdown-viewer *ngIf="!editQuestionBoolean" [data]="question.content" class="question-content"></app-markdown-viewer>
+
+						<!-- Question Owner Actions -->
+						<div *ngIf="currentUser._id == question.user._id && !editQuestionBoolean">
+							<!-- Edit -->
+							<button class="pl-0 btn btn-link text-success" (click)="editQuestion()">Éditer</button>
+							<!-- Delete -->
+							<button class="pl-0 btn btn-link text-danger" (click)="deleteQuestionDialog()">Supprimer</button>
+						</div>
+						
+						<!-- Question Edit -->
+						<div *ngIf="editQuestionBoolean" class="my-2">
+
+							<app-markdown-editor [(markdownText)]="question.content"></app-markdown-editor>
+
+							<div class="text-center mt-4">
+								<button type="button" class="btn btn-link text-danger" (click)="discardQuestionChange()">Annuler</button>
+								<button type="button" class="btn btn-success" (click)="updateQuestion()">Enregistrer</button>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+
+				<!-- Question Comments -->
+				<div class="card" *ngIf="question.comments.length">
+					<div class="card-body">
+
+						<div class="card-text mb-2" *ngFor="let comment of question.comments">
+							<div class="row align-items-center">
+
+								<div class="col-sm-1 text-center d-none d-sm-block">
+									<img *ngIf="!comment.user.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar"/>
+									<img *ngIf="comment.user.avatar" src="{{comment.user.avatar}}" alt="Avatar" class="rounded-circle border avatar"/>
+								</div>
+
+								<div class="col-sm-11">
+
+									<p class="card-text mb-0">
+										<small>
+											<a routerLink="/profile/{{comment.user.userName}}" class="no-text-deco text-capitalize">{{comment.user.userName}}</a>
+											<span class="ml-1 text-muted">&bull; {{comment.createdAt | date:'d MMM y à H:mm'}}</span>
+											<span *ngIf="comment.updatedAt" class="ml-1 text-info">&bull; <em>Édité le {{comment.updatedAt | date:'d MMM y à H:mm'}}</em></span>
+											<!-- Comment Owner Actions -->
+											<span *ngIf="currentUser._id == comment.user._id">
+												<!-- Edit -->
+												<button *ngIf="!editCommentsBoolean[comment._id]" class="py-0 btn btn-link btn-sm text-success" (click)="editComment(comment._id)">Éditer</button>
+												<!-- Delete -->
+												<button *ngIf="!editCommentsBoolean[comment._id]" class="py-0 pl-0 btn btn-link btn-sm text-danger" (click)="deleteCommentDialog(comment._id)">Supprimer</button>
+												<!-- Cancel Edit -->
+												<button *ngIf="editCommentsBoolean[comment._id]" class="py-0 btn btn-link btn-sm text-danger" (click)="discardCommentChange(comment)">Annuler</button>
+											</span>
+										</small>
+									</p>	
+
+									<p *ngIf="!editCommentsBoolean[comment._id]" class="card-text">{{comment.content}}</p>
+
+									<div *ngIf="editCommentsBoolean[comment._id]" class="w-75">
+										<form (ngSubmit)="updateComment(comment)">
+											<input type="text" class="form-control form-control-sm" name="question-comment-{{comment._id}}" required
+												autocomplete="off" placeholder="Écrire un commentaire" [(ngModel)]="comment.content" />
+										</form>
+									</div>
+
+								</div>
+
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<!-- Question Comment Reply -->
+				<div class="card">
+					<div class="card-body">
+						<div class="card-text d-flex justify-content-start align-items-center">
+
+							<img *ngIf="!currentUser.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar-reply"/>
+							<img *ngIf="currentUser.avatar" src="{{currentUser.avatar}}" alt="Avatar" class="rounded-circle border avatar-reply"/>
+
+							<div class="ml-3 w-75">
+								<form (ngSubmit)="createComment(newComment); newCommentForm.reset()" #newCommentForm="ngForm" novalidate>
+									<input type="text" class="form-control" aria-describedby="Question Comment" name="newComment" required
+										autocomplete="off" placeholder="Écrire un commentaire" [(ngModel)]="newComment.content" />
+								</form>
+							</div>
+
+						</div>
+					</div>
+				</div>
+
+				<!--Answers Count-->
+				<h4 *ngIf="question.answers.length==0" class="mt-4 lead">Aucune Réponse</h4>
+				<h4 *ngIf="question.answers.length==1" class="mt-4 lead">1 Réponse</h4>
+				<h4 *ngIf="question.answers.length>1" class="mt-4 lead">{{question.answers.length}} Réponses</h4>
+
+				<!--Answers-->
+				<div class="row" *ngFor="let answer of question.answers | orderBy : ['-best', '-votecount']">
+					<div class="col-12">
+
+						<!-- Answer NEW Example -->
+						<div class="card mt-3">
+
+							<!-- Answer Best Indicator -->
+							<div *ngIf="answer.best" class="card-header bg-success text-white">
+								<i class="fas fa-check fa-lg" aria-hidden="true"></i>
+								<span class="ml-2">Meilleure Réponse</span>
+							</div>
+
+							<!--Answer Best Selection-->
+							<div *ngIf="isLoggedIn && !question.hasBest && isOwner(question) && !isOwner(answer)" class="card-header bg-transparent text-center">
+								<button type="button" (click)="bestAnswer(answer._id)" class="btn btn-outline-success border-0">
+									<span class="mr-2">Choisir comme meilleure réponse</span>
+									<i class="fas fa-check fa-lg" aria-hidden="true"></i>
+								</button>
+							</div>
+
+							<div class="card-body">
+
+								<p class="card-text d-flex justify-content-start align-items-center">
+
+									<!-- Answer Author Avatar -->
+									<span class="mr-2">
+										<img *ngIf="!answer.user.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar-big"/>
+										<img *ngIf="answer.user.avatar" src="{{answer.user.avatar}}" alt="Avatar" class="rounded-circle border avatar-big"/>
+									</span>
+
+									<!-- Answer Author Name -->
+									<span class="mr-1"><a routerLink="/profile/{{answer.user.userName}}" class="no-text-deco text-capitalize">{{answer.user.userName}}</a></span>
+
+									<!-- Answer Create Date -->
+									<span class="mr-1 text-muted">&bull; {{answer.createdAt | date:'d MMM y à H:mm'}}</span>
+
+									<!-- Answer Edit Date -->
+									<span *ngIf="answer.updatedAt" class="text-info">&bull; <em>Éditée le {{answer.updatedAt | date:'d MMM y à H:mm'}}</em></span>
+
+									<!-- Answer Triggers -->
+									<span class="ml-auto d-flex flex-column">
+
+										<!--Answer Upvote-->
+										<!--Logged in + owner => can't vote-->
+										<button *ngIf="isLoggedIn && isOwner(answer)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous ne pouvez pas voter pour vous-même" matTooltipPosition="left">
+											<i class="fal fa-chevron-circle-up text-secondary" aria-hidden="true"></i>
+										</button>
+										<!--Logged in + not owner + already upvoted => can't vote-->
+										<button *ngIf="isLoggedIn && !isOwner(answer) && isUpvoted(answer)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette réponse" matTooltipPosition="left">
+											<i class="fas fa-chevron-circle-up text-success" aria-hidden="true"></i>
+										</button>
+										<!--Logged in + not owner + already downvoted => can't vote-->
+										<button *ngIf="isLoggedIn && !isOwner(answer) && isDownvoted(answer)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette réponse" matTooltipPosition="left">
+											<i class="fal fa-chevron-circle-up text-secondary" aria-hidden="true"></i>
+										</button>
+										<!--Not logged in => need to login-->
+										<button *ngIf="!isLoggedIn" type="button" class="ml-1 mr-1 trigger can-vote" matTooltip="Vous devez vous identifier pour pouvoir voter" matTooltipPosition="left">
+											<i class="fas fa-chevron-circle-up text-success" aria-hidden="true"></i>
+										</button>
+										<!--Logged in + not owner + no upvote + no downvote => can vote-->
+										<button *ngIf="isLoggedIn && !isOwner(answer) && !isUpvoted(answer) && !isDownvoted(answer)" type="button" (click)="upvote(answer._id)" class="ml-1 mr-1 trigger can-vote" matTooltip="Cette réponse est claire et utile" matTooltipPosition="left">
+											<i class="fas fa-chevron-circle-up text-success" aria-hidden="true"></i>
+										</button>
+										<!--End Answer Upvote-->
+
+										<!-- Answer Votes Count -->
+										<span class="lead font-weight-normal text-center" [ngClass]="{'text-success': answer.votecount>0, 'text-danger': answer.votecount<0, 'text-muted': answer.votecount==0}">{{answer.votecount}}</span>
+										
+										<!--Answer Downvote-->
+										<!--Logged in + owner => can't vote-->
+										<button *ngIf="isLoggedIn && isOwner(answer)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous ne pouvez pas voter pour vous-même" matTooltipPosition="left">
+											<i class="fal fa-chevron-circle-down text-secondary" aria-hidden="true"></i>
+										</button>
+										<!--Logged in + not owner + already downvoted => can't vote-->
+										<button *ngIf="isLoggedIn && !isOwner(answer) && isDownvoted(answer)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette réponse" matTooltipPosition="left">
+											<i class="fas fa-chevron-circle-down text-danger" aria-hidden="true"></i>
+										</button>
+										<!--Logged in + not owner + already upvoted => can't vote-->
+										<button *ngIf="isLoggedIn && !isOwner(answer) && isUpvoted(answer)" type="button" class="ml-1 mr-1 trigger" matTooltip="Vous avez déjà voté pour cette réponse" matTooltipPosition="left">
+											<i class="fal fa-chevron-circle-down text-secondary" aria-hidden="true"></i>
+										</button>
+										<!--Not logged in => need to login-->
+										<button *ngIf="!isLoggedIn" type="button" class="ml-1 mr-1 trigger can-vote" matTooltip="Vous devez vous identifier pour pouvoir voter" matTooltipPosition="left">
+											<i class="fas fa-chevron-circle-down text-danger" aria-hidden="true"></i>
+										</button>
+										<!--Logged in + not owner + no upvote + no downvote => can vote-->
+										<button *ngIf="isLoggedIn && !isOwner(answer) && !isUpvoted(answer) && !isDownvoted(answer)" type="button" (click)="downvote(answer._id)" class="ml-1 mr-1 trigger can-vote" matTooltip="Cette réponse n'est pas claire et inutile" matTooltipPosition="left">
+											<i class="fas fa-chevron-circle-down text-danger" aria-hidden="true"></i>
+										</button>
+										<!--End Answer Downvote-->
+
+									</span>
+
+								</p>
+
+								<app-markdown-viewer *ngIf="!editAnswersBoolean[answer._id]" [data]="answer.content" class="answer-content" [ngClass]="{'text-success': answer.best}"></app-markdown-viewer>
+
+								<!-- Answer Owner Actions -->
+								<div *ngIf="currentUser._id == answer.user._id && !editAnswersBoolean[answer._id]">
+									<!-- Edit -->
+									<button class="pl-0 btn btn-link text-success" (click)="editAnswer(answer._id)">Éditer</button>
+									<!-- Delete -->
+									<button class="pl-0 btn btn-link text-danger" (click)="deleteAnswerDialog(answer._id)">Supprimer</button>
+								</div>
+								
+								<!-- Answer Edit -->
+								<div *ngIf="editAnswersBoolean[answer._id]" class="my-2">
+
+									<app-markdown-editor [(markdownText)]="answer.content"></app-markdown-editor>
+
+									<div class="text-center mt-4">
+										<button type="button" class="btn btn-link text-danger" (click)="discardAnswerChange(answer)">Annuler</button>
+										<button type="button" class="btn btn-success" (click)="updateAnswer(answer)">Enregistrer</button>
+									</div>
+
+								</div>
+								
+							</div>
+						</div>
+
+						<!-- Answer Comments -->
+						<div class="card" *ngIf="answer.comments.length">
+							<div class="card-body">
+
+								<div class="card-text mb-2" *ngFor="let comment of answer.comments">
+									<div class="row align-items-center">
+
+										<div class="col-sm-1 text-center d-none d-sm-block">
+											<img *ngIf="!comment.user.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar"/>
+											<img *ngIf="comment.user.avatar" src="{{comment.user.avatar}}" alt="Avatar" class="rounded-circle border avatar"/>
+										</div>
+
+										<div class="col-sm-11">
+
+											<p class="card-text mb-0">
+												<small>
+													<a routerLink="/profile/{{comment.user.userName}}" class="no-text-deco text-capitalize">{{comment.user.userName}}</a>
+													<span class="ml-1 text-muted">&bull; {{comment.createdAt | date:'d MMM y à H:mm'}}</span>
+													<span *ngIf="comment.updatedAt" class="ml-1 text-info">&bull; <em>Édité le {{comment.updatedAt | date:'d MMM y à H:mm'}}</em></span>
+													<!-- Comment Owner Actions -->
+													<span *ngIf="currentUser._id == comment.user._id">
+														<!-- Edit -->
+														<button *ngIf="!editCommentsBoolean[comment._id]" class="py-0 btn btn-link btn-sm text-success" (click)="editComment(comment._id)">Éditer</button>
+														<!-- Delete -->
+														<button *ngIf="!editCommentsBoolean[comment._id]" class="py-0 pl-0 btn btn-link btn-sm text-danger" (click)="deleteAnswerCommentDialog(answer._id, comment._id)">Supprimer</button>
+														<!-- Cancel Edit -->
+														<button *ngIf="editCommentsBoolean[comment._id]" class="py-0 btn btn-link btn-sm text-danger" (click)="discardCommentChange(comment)">Annuler</button>
+													</span>
+												</small>
+											</p>	
+
+											<p *ngIf="!editCommentsBoolean[comment._id]" class="card-text">{{comment.content}}</p>
+
+											<div *ngIf="editCommentsBoolean[comment._id]" class="w-75">
+												<form (ngSubmit)="updateAnswerComment(answer._id, comment)">
+													<input type="text" class="form-control form-control-sm" name="answer-comment-{{comment._id}}" required
+														autocomplete="off" placeholder="Écrire un commentaire" [(ngModel)]="comment.content" />
+												</form>
+											</div>
+
+										</div>
+
+									</div>
+								</div>
+
+							</div>
+						</div>
+
+						<!-- Answer Comment Reply -->
+						<div class="card">
+							<div class="card-body">
+								<div class="card-text d-flex justify-content-start align-items-center">
+
+									<img *ngIf="!currentUser.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar-reply"/>
+									<img *ngIf="currentUser.avatar" src="{{currentUser.avatar}}" alt="Avatar" class="rounded-circle border avatar-reply"/>
+
+									<div class="ml-3 w-75">
+										<form (ngSubmit)="createAnswerComment(answer._id, answer.newComment)" novalidate>
+											<input type="text" class="form-control w-75" name="comment-{{answer._id}}" autocomplete="off" required
+											aria-describedby="Answer Comment" placeholder="Écrire un commentaire" [(ngModel)]="answer.newComment" />
+										</form>
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<!-- New Answer -->
+				<div class="card mt-3 mb-3">
+					<div class="card-body">
+
+						<div class="card-text">
+							<div class="row">
+
+								<div class="col-sm-12 col-md-1 d-flex justify-content-center align-items-start mb-3">
+									<img *ngIf="!currentUser.avatar" src="assets/images/samples/avatar-default" alt="Avatar" class="rounded-circle border avatar-big"/>
+									<img *ngIf="currentUser.avatar" src="{{currentUser.avatar}}" alt="Avatar" class="rounded-circle border avatar-big"/>
+								</div>
+
+								<div class="col-sm-12 col-md-11">
+
+									<p class="lead text-primary"><strong>Votre réponse :</strong></p>
+
+									<app-markdown-editor [(markdownText)]="newAnswer.content"></app-markdown-editor>
+
+									<div class="text-center mt-4">
+										<button type="button" class="btn btn-success" (click)="createAnswer(newAnswer)">Envoyer</button>
+									</div>
+									
+								</div>
+
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
+</div>

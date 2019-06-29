@@ -1,0 +1,123 @@
+<div class="container-fluid">
+	<div class="row py-3 justify-content-around">
+
+		<!-- Left -->
+		<div *ngIf="categories.length!==0" class="col-lg-3 d-flex flex-column">
+
+			<!-- Categories -->
+			<div class="card font-weight-light shadow-lg my-4">
+					<div class="card-header bg-info text-white">Catégories ({{categories.length}})</div>
+					<ul class="list-group list-group-flush">
+						<li *ngFor="let category of categories" (click)="filterQuestions(category.tag)"
+							class="list-group-item list-group-item-action cursor d-flex justify-content-start align-items-center">
+							<i class="fa-lg" aria-hidden="true" [ngClass]="selectedTags.indexOf(category.tag) > -1 ? 'fas fa-check-square text-success':'fal fa-square'"></i>
+							<strong class="ml-3 text-capitalize">{{category.tag}}</strong>
+							<span class="ml-auto">{{category.amount}}</span>
+						</li>
+					</ul>
+				</div>
+				<!-- End Categories -->
+
+		</div>
+		<!-- End Left -->
+
+		<!-- Right -->
+		<div class="col-lg-8 d-flex flex-column">
+
+			<!-- Questions -->
+			<div class="d-flex justify-content-start align-items-center font-title font-weight-light text-primary border-bottom pb-2 my-4">
+
+				<div *ngIf="selectedTags.length==0">
+					<span>Toutes les Questions</span>
+					<span *ngIf="questions.length>0" class="ml-2 badge badge-primary">{{questions.length}}</span>
+				</div>
+
+				<div *ngIf="selectedTags.length>0">
+					<button type="button" *ngFor="let tag of selectedTags" class="mr-2 btn btn-info text-capitalize" (click)="filterQuestions(tag)">
+						<span>{{tag}}</span>
+						<i class="fas fa-times fa-fw"></i>
+					</button>
+					<button type="button" class="btn btn-link text-success" (click)="resetFilters()">
+						<i class="fal fa-redo fa-fw"></i> Réinitialiser
+					</button>
+				</div>
+
+				<button type="button" class="btn btn-link ml-auto" matTooltip="Cartes" matTooltipPosition="above"
+					(click)="changeDisplay(0)" [ngClass]="{ 'text-muted': displayOrder!=0}">
+					<i class="fal fa-th-list fa-lg"></i>
+				</button>
+				<button type="button" class="btn btn-link" matTooltip="Liste" matTooltipPosition="above"
+					(click)="changeDisplay(1)" [ngClass]="{ 'text-muted': displayOrder!=1}">
+					<i class="fal fa-list-ul fa-lg"></i>
+				</button>
+
+			</div>
+
+			<div class="row my-4" *ngIf="questions.length==0">
+				<div class="col-12 text-center">
+					<p class="lead text-muted">Aucune question n'a été posée pour le moment, soyez le premier !</p>
+					<a routerLink="./create" class="btn btn-success mt-3">Créer une Question</a>
+				</div>
+			</div>
+
+			<div class="row my-4" *ngIf="selectedTags.length>0 && filteredQuestions.length==0">
+				<div class="col-12 text-center">
+					<p class="lead text-danger">Aucune question n'a été trouvée avec ces filtres !</p>
+					<button type="button" class="btn btn-success mt-3" (click)="resetFilters()">
+						<i class="fal fa-redo fa-fw"></i> Réinitialiser
+					</button>
+				</div>
+			</div>
+
+			<div *ngIf="questions.length!==0"> 
+
+				<!-- Display as Cards -->
+				<div class="row" *ngIf="displayOrder==0">
+					<div class="col-12">
+
+						<a routerLink="./{{question._id}}" class="no-text-deco" *ngFor="let question of filteredQuestions">
+							<app-card-question [question]="question"></app-card-question>
+						</a>
+
+					</div>
+				</div>
+				<!-- End Display as Cards -->
+
+				<!-- Display as List -->
+				<div class="row" *ngIf="displayOrder==1"> 
+					<div class="col-12">
+
+						<div class="list-group">
+
+							<a *ngFor="let question of filteredQuestions" routerLink="./{{question._id}}" [ngClass]="{ 'answer-success': question.hasBest, 'is-star': isStar(question) }"
+								class="list-group-item list-group-item-action d-flex justify-content-start align-items-center font-weight-light">
+
+								<i class="fa-lg fa-fw mr-2" aria-hidden="true" [ngClass]="question.hasBest ? 'fas fa-check text-success' : question.answers.length ? 'fal fa-comment-dots text-info' : 'fal fa-comment text-info'"></i>
+
+								<strong *ngIf="question.title">{{question.title}}</strong>
+								<span *ngIf="!question.title" class="text-muted">Sans Titre</span>
+								<span class="ml-1 text-muted">&bull; {{question.createdAt | timeAgo}}</span>
+
+								<i *ngIf="isStar(question)" class="fas fa-star text-warning ml-2" aria-hidden="true"></i>
+
+								<div *ngIf="question.tags.length>0" class="ml-auto text-info">
+									<span class="ml-2" *ngFor="let tag of question.tags">{{tag}}</span>
+								</div>
+
+							</a>
+							
+						</div>
+				
+					</div>
+				</div>
+				<!-- End Display as List -->
+
+			</div>
+			<!-- End Questions -->
+
+		</div>
+		<!-- End Right -->
+
+	</div>
+</div>
+
